@@ -1,3 +1,5 @@
+/**Permite realizar validacion  e implementar encriptacion a la contraseña */
+
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 

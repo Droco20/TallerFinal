@@ -1,3 +1,5 @@
+/** Define las rutas de acceso. carga cada vista */
+
 const router = require('express').Router();
 const passport = require('passport');
 

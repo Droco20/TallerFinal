@@ -1,3 +1,5 @@
+/** Define el modelo de usuario */
+
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt-nodejs');
 

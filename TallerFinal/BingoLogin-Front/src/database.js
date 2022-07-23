@@ -1,3 +1,5 @@
+/**conexion con la base de datos MongoDB */
+
 const mongoose = require('mongoose');
 const { mongodb } = require('./keys');
 
