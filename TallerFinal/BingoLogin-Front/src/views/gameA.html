@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://fonts.googleapis.com/css2?family=Patua+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/styles/style2.css">
+</head>
+
+<body>
+    <div class="top">
+        <button id="start-button">Start!</button>
+        <p>Draws remaining<br><span id="draws-remaining"></span></p>
+        <p id="result-text"></p>
+    </div>
+    <div class="main">
+        <ul id="drawn-numbers">
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+        </ul>
+        <table id="bingo-card">
+            <thead>
+                <tr>
+                    <th>B</th>
+                    <th>I</th>
+                    <th>N</th>
+                    <th>G</th>
+                    <th>O</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td class="middle-square">★</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+    <script>
+        // Find the Start button in the DOM so we can reference this later
+        var startButton = document.getElementById("start-button")
+
+        // Find the result text element in the DOM so we can reference this later
+        var resultEl = document.getElementById("result-text")
+
+        // Find the drawn number placeholders in the DOM so we can reference these later
+        var drawnEls = document.querySelectorAll("#drawn-numbers li")
+
+        // Find the 'draws remaining' element in the DOM so we can update it in JS
+        var remainingEl = document.getElementById("draws-remaining")
+
+        // Find all the squares of the bingo card in the DOM so we can reference these later
+        var squareEls = document.querySelectorAll("#bingo-card td")
+
+        // A variable to store the setInterval ID so that we can stop it later
+        // This is used to trigger the drawing of numbers at regular intervals
+        var drawNumberIntervalId = 0
+        var gameOverTimeoutId = 0
+
+        // An array to store the undrawn numbers
+        var undrawnNumbers = []
+
+        // An array to store the drawn numbers
+        var drawnNumbers = []
+
+        // The maximum allowed draws before it is game over
+        var maxDraws = 30
+
+        // Milliseconds between draws
+        var drawDelay = 4000
+
+        // A flag so we know if a game is currently running or not
+        var gameRunning = false
+
+
+        /*
+        If we consider the grid of squares to have indexes based on their positions:
+        
+            0  1  2  3  4
+            5  6  7  8  9
+            10 11 12 13 14
+            15 16 17 18 19
+            20 21 22 23 24
+            
+        Then we can define the win conditions based on these indexes
+        */
+
+        var winConditions = [
+            [0, 4, 20, 24],         // Four corners
+            [0, 1, 2, 3, 4],        // Row 1
+            [5, 6, 7, 8, 9],        // Row 2
+            [10, 11, 13, 14],       // Row 3 (index 12 is omitted as the centre square of the card)
+            [15, 16, 17, 18, 19],   // Row 4 
+            [20, 21, 22, 23, 24],   // Row 5
+            [0, 5, 10, 15, 20],     // Col 1
+            [1, 6, 11, 16, 21],     // Col 2
+            [2, 7, 17, 22],         // Col 3 (index 12 is omitted as the centre square of the card)
+            [3, 8, 13, 18, 23],     // Col 4
+            [4, 9, 14, 19, 24],     // Col 5
+            [0, 6, 18, 24],         // Diagonal 1 (index 12 is omitted as the centre square of the card)
+            [20, 16, 8, 4]          // Diagonal 2 (index 12 is omitted as the centre square of the card)
+        ]
+
+
+
+        // Listen for Start button click to start a new game
+        startButton.addEventListener("click", function () {
+            startGame()
+        })
+
+        // Loop through all the square elements
+        squareEls.forEach(function (squareEl) {
+
+            // Listen for clicks on the square
+            squareEl.addEventListener("click", function () {
+                // If the game is running...
+                if (gameRunning) {
+                    //... then check for any matches with that square
+                    checkMatch(squareEl)
+                }
+            })
+        })
+
+
+
+        // ~~~~~~~
+
+        // Function to initialise a new game
+        function startGame() {
+            // reset the undrawn numbers array
+            undrawnNumbers = randomNumbers(1, 75) // Standard bingo uses numbers 1 - 75
+
+            // reset the matched squares display
+            squareEls.forEach(function (squareEl) {
+                squareEl.classList.remove("match")
+            })
+
+            // reset the drawn numbers array
+            drawnNumbers = []
+
+            // reset the drawn numbers display
+            drawnEls.forEach(function (drawnEl) {
+                drawnEl.innerText = ""
+                drawnEl.classList.remove("show")
+            })
+
+            // Reset 'draws remaining' text
+            remainingEl.innerText = maxDraws
+
+            // Reset the result text
+            resultEl.innerText = ""
+
+            gameRunning = true
+
+            // disable the start button and change its text
+            startButton.disabled = true
+            startButton.innerText = "Suerte!"
+
+            // excute the function that populates the bingo card with random numbers
+            prepareBingoCard()
+
+            // start drawing numbers every few seconds
+            drawNumberIntervalId = setInterval(function () {
+                drawNumber()
+            }, drawDelay)
+        }
+
+        function drawNumber() {
+            // Remove the next number from the undrawn array
+            var number = undrawnNumbers.pop()
+
+            // Add the number to the drawn numbers array
+            drawnNumbers.push(number)
+
+            // Update the drawn numbers display
+            updateDrawnNumbersDisplay()
+
+            // Update the 'draws remaining' text
+            remainingEl.innerText = maxDraws - drawnNumbers.length
+
+            // After each number draw, we check for an end game scenario
+            // which is if we ran out of numbers to draw or we reached the 
+            // limit as per the game rules
+            if (undrawnNumbers.length == 0 || drawnNumbers.length >= maxDraws) {
+                endGame()
+            }
+        }
+
+        function getLetter(number) {
+            if (number <= 15) return 'B'
+            if (number <= 30) return 'I'
+            if (number <= 45) return 'N'
+            if (number <= 60) return 'G'
+            if (number <= 75) return 'O'
+
+            return ''
+        }
+
+        // Function to check if a square's number matches any drawn numbers,
+        // and update its display if so, and check for a win condition
+        function checkMatch(squareEl) {
+
+            // Get the square's number. We need to turn this back into a number
+            // in order to compare it to the numbers in the drawnNumbers array
+            var squareNum = Number(squareEl.innerText)
+
+            // Use the inbuilt find method on the array to see
+            // if it contains the number
+            var found = drawnNumbers.find(function (drawnNum) {
+                return drawnNum == squareNum
+            })
+
+            // If match is found...
+            if (found) {
+
+                // Update the display of the square
+                squareEl.classList.add("match")
+
+                // Check for win condition
+                checkWin()
+            }
+        }
+
+        // Function to check if there is a win condition on the card
+        function checkWin() {
+            var squareElsArray = Array.from(squareEls)
+
+            // Map the squares to an array with true/false (matched/unmatched)
+            // for the index of each square in the grid
+            var matchedSquares = squareElsArray.map(function (squareEl, i) {
+                var isMatch = squareEl.classList.contains("match")
+                return isMatch
+            })
+
+            // Loop through and check each win condition
+            for (var i = 0; i < winConditions.length; i++) {
+                var condition = winConditions[i]
+
+                // Check if this condition is the winner
+                var isWinner = winConditionMet(condition, matchedSquares)
+
+                // If is a winner...
+                if (isWinner) {
+
+                    // Invoke the winGame function
+                    winGame()
+
+                    // Break out of this loop since we no longer need
+                    // to check the rest of the conditions
+                    break;
+                }
+            }
+        }
+
+        function winConditionMet(condition, matchedSquares) {
+
+            // Loop through all the positions in the condition
+            for (var i = 0; i < condition.length; i++) {
+                var pos = condition[i]
+
+                // If that position is not a match, then
+                // we can simply return false here as the
+                // condition is not met
+                if (matchedSquares[pos] == false) {
+                    return false
+                }
+            }
+
+            // If we reach this line, its because all
+            // positions in the condition were matched
+            return true
+        }
+
+        // Function to make the game end and re-enable the start button
+        function endGame() {
+
+            // Stop drawing numbers
+            clearInterval(drawNumberIntervalId)
+
+            // We wait for a few seconds grace period before ending the game to
+            // give the player the chance to check the last drawn number
+            gameOverTimeoutId = setTimeout(function () {
+                gameRunning = false
+
+                // Re-enable the Start button
+                startButton.disabled = false
+                startButton.innerText = "Nuevo Juego!"
+
+                // Set the result text
+                resultEl.innerText = "Game Over!"
+
+            }, drawDelay * 1.5)
+
+        }
+
+        function winGame() {
+            gameRunning = false
+
+            // Clear the gameover timeout in case the win happened
+            // during the grace period
+            clearTimeout(gameOverTimeoutId)
+
+            // Stop drawing numbers
+            clearInterval(drawNumberIntervalId)
+
+            // Re-enable the Start button
+            startButton.disabled = false
+            startButton.innerText = "Play again!"
+
+            // Set the result text
+            resultEl.innerText = "BINGO!"
+        }
+
+
+        // Function to update the display of drawn numbers
+        function updateDrawnNumbersDisplay() {
+            var drawnDisplayCount = drawnEls.length
+
+            // get the latest drawn numbers
+            var latest = drawnNumbers.slice(-drawnDisplayCount)
+
+            // Update the DOM elements to display the correct number
+            latest.forEach(function (number, i) {
+                var element = drawnEls[latest.length - i - 1]
+
+                // Get the corresponding BINGO letter for the number
+                var letter = getLetter(number)
+
+                // Set the elements text to the letter + number
+                element.innerText = letter + number
+
+                // Adding the 'show' class to the element will unhide it
+                // It was hidden by default in CSS
+                element.classList.add("show")
+            })
+        }
+
+        // Function to set up the bingo card with all its random numbers, using standard bingo rules
+        function prepareBingoCard() {
+            populateColumn(0, randomNumbers(1, 15))  // column 0 is B
+            populateColumn(1, randomNumbers(16, 30)) // column 1 is I
+            populateColumn(2, randomNumbers(31, 45)) // column 2 is N
+            populateColumn(3, randomNumbers(46, 60)) // column 3 is G
+            populateColumn(4, randomNumbers(61, 75)) // column 4 is O
+        }
+
+
+        // Function to populate a column of the bingo card with numbers
+        function populateColumn(column, numbers) {
+
+            // query the DOM to get the squares for the specified column, in a list we can loop through
+            var columnSquares = document.querySelectorAll("#bingo-card td:nth-child(" + (column + 1) + ")")
+
+            // Loop through our squares and set its value from the randomised numbers
+            columnSquares.forEach(function (square, i) {
+
+                // If we are the very center square, we want to skip setting the number
+                if (column === 2 && i === 2) {
+                    return
+                }
+
+                // Set the inner text of the HTML element to display the number
+                square.innerText = numbers.pop()
+            })
+        }
+
+        // Function to create an array of mixed up numbers
+        function randomNumbers(start, end) {
+
+            // Initialise an empty array to store the numbers
+            var numbers = []
+
+            // Use a for loop with the specified start and end indexes, to push those numbers into the array
+            for (var i = start; i < end; i++) {
+                numbers.push(i)
+            }
+
+            // Run the ordered array through the shuffle function to randomise the positions
+            var shuffled = shuffleArray(numbers)
+
+            // Return the final shuffled numbers
+            return shuffled
+        }
+
+        // Function to shuffle all the position of all the items in an array
+        function shuffleArray(a) {
+            // return a;
+
+            var j, x, i;
+            for (i = a.length - 1; i > 0; i--) {
+                j = Math.floor(Math.random() * (i + 1));
+                x = a[i];
+                a[i] = a[j];
+                a[j] = x;
+            }
+            return a;
+        }
+
+
+        // ~~~~~~~
+
+        // Make the drawn numbers fade out from left to right
+        drawnEls.forEach(function (el, i) {
+            el.style.opacity = 1 - i * (1 / drawnEls.length)
+        })
+
+
+    </script>
+
+
+</body>
+
+</html>
