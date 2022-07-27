@@ -11,6 +11,10 @@ router.get('/signup', (req, res, next) => {
   res.render('signup');
 });
 
+router.get('/gameA.html', (req, res, next) => {
+  res.render('gameA.html');
+});
+
 router.post('/signup', passport.authenticate('local-signup', {
   successRedirect: '/profile',
   failureRedirect: '/signup',
@@ -31,6 +35,7 @@ router.post('/signin', passport.authenticate('local-signin', {
 router.get('/profile',isAuthenticated, (req, res, next) => {
   res.render('profile');
 });
+
 
 router.get('/logout', (req, res, next) => {
   req.logout();

@@ -11,11 +11,17 @@ const app = express();
 require('./database');
 require('./passport/local-auth');
 
+//static
+app.use(express.static(__dirname + '/public'))
+
+
+
 // settings
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'))
 app.engine('ejs', engine);
 app.set('view engine', 'ejs');
+app.engine('html', require('ejs').renderFile);
 
 
 // middlewares
@@ -42,6 +48,8 @@ app.use((req, res, next) => {
 
 // routes
 app.use('/', require('./routes/index'));
+
+
 
 // Starting the server
 app.listen(app.get('port'), () => {

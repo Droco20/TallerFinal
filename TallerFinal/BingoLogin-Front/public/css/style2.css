@@ -4,17 +4,30 @@
      box-sizing: border-box;
 }
 
+.container {
+     background-color: #f1f1f1;
+     width: 100vw;
+     display: flex;
+   }
+
+   .vertical {
+     background-color: white;
+     height: 115vh;
+     display: center;
+     width: 100%;
+   }
+
 body {
      text-align: center;
      background-size: cover;
      font-family: 'Patua One', cursive;
      margin-left: 8px;
-     margin-top: px;
+     margin-top: 10px;
 
 }
 
 #start-button {
-     padding: 20px;
+     padding: 15px;
      font-size: 30px;
      cursor: pointer;
      display: block;
@@ -49,7 +62,7 @@ body {
 }
 
 #bingo-card .middle-square {
-     font-size: 50px
+     font-size: 60px
 }
 
 

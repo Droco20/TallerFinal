@@ -1,3 +1,5 @@
+ <!-- Vista del juego, Carton y balotera automatica con funcion de tachado manual -->
+ 
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,13 +9,161 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link href="https://fonts.googleapis.com/css2?family=Patua+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/src/styles/style2.css">
+    <link rel="stylesheet" href="/public/css/style2.css">
 </head>
+<nav class="navbar navbar-expand-lg bg-light">
+    <div class="container-fluid">
+
+        <img class="mt-1"
+            src="https://media.istockphoto.com/vectors/bingo-vector-typography-vector-id1183778794?k=20&m=1183778794&s=612x612&w=0&h=VQcToZ56AW6TAqbjA5LdLY19eSFLWejOaz3HTV6G2BE="
+            alt="" width="300" height="150" />
+    </div>
+
+</nav>
+<style>
+    * {
+        padding: 0px;
+        margin: 0px;
+        box-sizing: border-box;
+    }
+
+    .container {
+        background-color: #f1f1f1;
+        width: 100vw;
+        display: flex;
+    }
+
+    .vertical {
+        background-color: white;
+        height: 115vh;
+        display: center;
+        width: 100%;
+    }
+
+    body {
+        text-align: center;
+        background-size: cover;
+        font-family: 'Patua One', cursive;
+        margin-left: 8px;
+        margin-top: 10px;
+
+    }
+
+    #start-button {
+        padding: 15px;
+        font-size: 30px;
+        cursor: pointer;
+        display: block;
+        width: 200px;
+
+        /*     border-radius: 0px;
+    background: grey;
+    border: 2px solid #0000ff99; */
+    }
+
+    #bingo-card th {
+        height: 80px;
+        width: 80px;
+        font-size: 35px;
+        background: #A9CCE3;
+        color: black;
+        font-weight: bold;
+    }
+
+    #bingo-card td {
+        height: 80px;
+        width: 80px;
+        border: 2px solid black;
+        border-collapse: collapse;
+        border-color: #24B5E0;
+        font-size: 30px;
+    }
+
+    #bingo-card .middle-square,
+    #bingo-card td.match {
+        background-color: #FCFB8E;
+    }
+
+    #bingo-card .middle-square {
+        font-size: 60px
+    }
+
+
+    #drawn-numbers,
+    #drawn-numbers li {
+        margin: 0px;
+        padding: 0px;
+        list-style: none;
+    }
+
+    #drawn-numbers {
+        margin-right: 30px;
+        border: 3px solid #A9CCE3;
+        border-radius: 50px;
+        padding: 10px;
+    }
+
+    #drawn-numbers li {
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+        background: #ccc;
+        /*     border: 2px solid black; */
+        visibility: hidden;
+
+        text-align: center;
+        line-height: 80px;
+        font-size: 32px;
+        font-weight: bold;
+
+        box-shadow: 3px 3px 0px 0px #DAD9E8;
+    }
+
+    #drawn-numbers li:first-child {
+        /*     border-color: blue; */
+        background: #FB4703;
+    }
+
+    #drawn-numbers li.show {
+        visibility: visible;
+    }
+
+    #drawn-numbers li+li {
+        margin-top: 16px;
+    }
+
+    #result-text {
+        font-size: 42px;
+        color: #FB8E03;
+    }
+
+    .main {
+        display: flex;
+        align-items: start;
+    }
+
+    .top {
+        display: flex;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .top p {
+        text-align: center;
+        margin-left: 30px;
+    }
+
+    #draws-remaining {
+        font-weight: bold;
+        font-size: 30px;
+        color: #03A9FB;
+    }
+</style>
 
 <body>
     <div class="top">
         <button id="start-button">Start!</button>
-        <p>Draws remaining<br><span id="draws-remaining"></span></p>
+        <p>Tiempo Restante<br><span id="draws-remaining"></span></p>
         <p id="result-text"></p>
     </div>
     <div class="main">
@@ -52,7 +202,7 @@
                 <tr>
                     <td></td>
                     <td></td>
-                    <td class="middle-square">★</td>
+                    <td class="middle-square">☻</td>
                     <td></td>
                     <td></td>
                 </tr>
@@ -437,8 +587,6 @@
             return a;
         }
 
-
-        // ~~~~~~~
 
         // Make the drawn numbers fade out from left to right
         drawnEls.forEach(function (el, i) {
